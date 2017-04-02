@@ -4,6 +4,7 @@ const csv = require('csv');
 const fs = require('fs');
 const inquirer = require('inquirer');
 const async = require('async');
+const chalk = require('chalk');
 
 commander
 	.version('0.0.1')
@@ -49,7 +50,6 @@ let __sendEmail = function (to, from, subject, callback) {
   let mail = new helper.Mail(fromEmail, subject, toEmail, body);
 
   let sg = require('sendgrid')(process.env.SENDGRID_API_KEY);
-	console.log(process.env.SENDGRID_API_KEY);
   let request = sg.emptyRequest({
     method: 'POST',
     path: '/v3/mail/send',
@@ -57,7 +57,6 @@ let __sendEmail = function (to, from, subject, callback) {
   });
 
   sg.API(request, function(error, response) {
-		console.log(error);
     if (error) { return callback(error); }
     callback();
   });
@@ -76,6 +75,11 @@ stream
     inquirer.prompt(questions).then(function (ans) {
       async.each(contactList, function (recipient, fn) {
         __sendEmail(recipient, ans.sender, ans.subject, fn);
+      }, function (err) {
+        if (err) {
+          return console.error(chalk.red(err.message));
+        }
+        console.log(chalk.green('Success'));
       });
     });
   });
