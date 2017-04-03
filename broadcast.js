@@ -1,19 +1,24 @@
 #!/usr/bin/env node
 
 "use strict";
+var accountSid = 'ACed1648aa54de881d226b77588c664738'; // Your Account SID from www.twilio.com/console
+var authToken = '6bdee499af24a2d0bbf4fc48aefe4a00';   // Your Auth Token from www.twilio.com/console
 const commander = require('commander');
 const csv = require('csv');
 const fs = require('fs');
 const inquirer = require('inquirer');
 const async = require('async');
 const chalk = require('chalk');
+const twilio = require('twilio');
 
 commander
 	.version('0.0.1')
 	.option('-l, --list [list]', 'list of customers in CSV file')
-	.parse(process.argv)
+  .option('-s, --sms', 'Send some smss')
+	.parse(process.argv);
 
-let questions = [
+if(commander.list) {
+  let questions = [
 	{
 		type: "input",
 		name: "sender.email",
@@ -30,7 +35,6 @@ let questions = [
 		message: "Subject "
 	}
 ];
-
 let contactList = [];
 let parse = csv.parse;
 let stream = fs.createReadStream(commander.list)
@@ -85,3 +89,29 @@ stream
       });
     });
   });
+
+} else if(commander.sms) {
+  let twilQuestions = [
+  {
+    type: "input",
+    name: "twil.number",
+    message: "Recipient's Phone Number: "
+  },
+  {
+    type: "input",
+    name: "twil.body",
+    message: "SMS Body: "
+  }
+];
+var client = new twilio.RestClient(accountSid, authToken);
+inquirer.prompt(twilQuestions).then(function (ans) {
+    client.messages.create({
+    body: ans.twil.body,
+    to: ans.twil.number,  // Text this number
+    from: '+17739806935' // From a valid Twilio number
+}, function(err, message) {
+  console.log(message);
+    console.log(message.sid);
+});
+    });
+}

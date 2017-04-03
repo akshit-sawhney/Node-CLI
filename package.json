@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "description": "Node CLI",
   "main": "broadcast.js",
-  "bin" : {
-    "broadcast" : "./broadcast.js"
+  "bin": {
+    "broadcast": "./broadcast.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,6 +17,7 @@
     "commander": "^2.9.0",
     "csv": "^1.1.0",
     "inquirer": "^2.0.0",
-    "sendgrid": "^4.10.0"
+    "sendgrid": "^4.10.0",
+    "twilio": "^2.11.1"
   }
 }
