@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 "use strict";
-var accountSid = 'ACed1648aa54de881d226b77588c664738'; // Your Account SID from www.twilio.com/console
-var authToken = '6bdee499af24a2d0bbf4fc48aefe4a00';   // Your Auth Token from www.twilio.com/console
+var accountSid = 'ACed1648aa54de881d226b77588c664738';
+var authToken = '6bdee499af24a2d0bbf4fc48aefe4a00';
 const commander = require('commander');
 const csv = require('csv');
 const fs = require('fs');
@@ -37,14 +37,27 @@ if(commander.list) {
   ];
   let contactList = [];
   let parse = csv.parse;
-  let stream = fs.createReadStream(commander.list)
-	  .pipe(
-		  parse(
-			  {
-				  delimiter: ','
-			  }
-		  )
-	  );
+  var obj;
+  fs.readFile(commander.list, 'utf8', function (err, data) {
+    if (err) throw err;
+    obj = JSON.parse(data);
+    let counter = 0;
+    Object.keys(obj).forEach(function (key) {
+      let individualObject = obj[key];
+      contactList[counter] = individualObject;
+      counter++;
+    });
+    inquirer.prompt(questions).then(function (ans) {
+        async.each(contactList, function (recipient, fn) {
+          __sendEmail(recipient, ans.sender, ans.subject, fn);
+        }, function (err) {
+          if (err) {
+            return console.error(chalk.red(err.message));
+          }
+          console.log(chalk.green('Success'));
+        });
+      });
+  });
 
   let __sendEmail = function (to, from, subject, callback) {
     let template = "Glory Glory Man United..... And the reds go marching on and on and on!!!!";
@@ -67,27 +80,6 @@ if(commander.list) {
     });
   };
 
-  stream
-    .on("error", function (err) {
-      return console.error(err.response);
-    })
-    .on("data", function (data) {
-      let name = data[0] + " " + data[1];
-      let email = data[2];
-      contactList.push({ name : name, email : email });
-    })
-    .on("end", function () {
-      inquirer.prompt(questions).then(function (ans) {
-        async.each(contactList, function (recipient, fn) {
-          __sendEmail(recipient, ans.sender, ans.subject, fn);
-        }, function (err) {
-          if (err) {
-            return console.error(chalk.red(err.message));
-          }
-          console.log(chalk.green('Success'));
-        });
-      });
-    });
 } else if(commander.sms) {
   let twilQuestions = [
     {
@@ -108,8 +100,6 @@ if(commander.list) {
       to: ans.twil.number,  // Text this number
       from: '+17739806935' // From a valid Twilio number
     }, function(err, message) {
-      console.log(message);
-      console.log(message.sid);
     });
   });
 }
